@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { generateDayPlan, planHorizon, buildTaskQueue, type SchedulerInput } from '../engine/scheduler'
 import type { Task, ScheduledBlock } from '../types'
 import { parseTime } from '../utils/time'
+import { isoDate, addDaysISO } from '../utils/date'
 
 const MONDAY = '2026-06-22' // a Monday
 
@@ -358,17 +359,22 @@ describe('planHorizon (multi-day)', () => {
   })
 
   it('does not schedule task work after its deadline', () => {
+    // Anchored to the real "today" because the scheduler treats a deadline in the
+    // past (relative to the actual current date) as overdue and schedules it ASAP.
+    // Using a fixed past date here would make the test a time-bomb.
+    const start = isoDate()
+    const deadline = addDaysISO(start, 1) // a still-future, 2-day window (today + tomorrow)
     const horizon = planHorizon(
-      MONDAY,
+      start,
       6,
       baseInput({
         budgets: { productiveMinutesPerDay: 60, freeMinutesPerDay: 0 },
-        // Needs 180 min but only 2 days (Mon, Tue) before the Tue deadline → 120 schedulable.
-        tasks: [task({ id: 'A', title: 'A', estimatedMinutes: 180, remainingMinutes: 180, deadline: '2026-06-23' })],
+        // Needs 180 min but only 2 days before the deadline → 120 schedulable.
+        tasks: [task({ id: 'A', title: 'A', estimatedMinutes: 180, remainingMinutes: 180, deadline })],
       }),
     )
     for (const [iso, plan] of Object.entries(horizon)) {
-      if (iso > '2026-06-23') expect(refMinutes(plan, 'A')).toBe(0)
+      if (iso > deadline) expect(refMinutes(plan, 'A')).toBe(0)
     }
   })
 })

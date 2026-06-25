@@ -45,6 +45,20 @@ export interface NewTaskInput {
   window?: TimeWindow
 }
 
+/** The slice of state that is persisted and synced (see `partialize` below). */
+export type PersistedState = Pick<
+  StoreState,
+  | 'tasks'
+  | 'recurring'
+  | 'events'
+  | 'interests'
+  | 'template'
+  | 'budgets'
+  | 'settings'
+  | 'dayPlans'
+  | 'alerts'
+>
+
 interface StoreState {
   tasks: Task[]
   recurring: RecurringTask[]
@@ -108,6 +122,8 @@ interface StoreState {
   // Utility
   seedSample: () => void
   resetAll: () => void
+  /** Replace the persisted planner slice wholesale (used by cross-device sync). */
+  hydrate: (data: Partial<PersistedState>) => void
 }
 
 export const useStore = create<StoreState>()(
@@ -523,6 +539,20 @@ export const useStore = create<StoreState>()(
             dayPlans: {},
             alerts: [],
           })
+        },
+
+        hydrate: (data) => {
+          set((s) => ({
+            tasks: data.tasks ?? s.tasks,
+            recurring: data.recurring ?? s.recurring,
+            events: data.events ?? s.events,
+            interests: data.interests ?? s.interests,
+            template: data.template ?? s.template,
+            budgets: data.budgets ?? s.budgets,
+            settings: data.settings ?? s.settings,
+            dayPlans: data.dayPlans ?? s.dayPlans,
+            alerts: data.alerts ?? s.alerts,
+          }))
         },
       }
     },

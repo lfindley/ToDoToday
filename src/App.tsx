@@ -9,6 +9,9 @@ import Tasks from './components/Tasks'
 import Recurring from './components/Recurring'
 import Settings from './components/Settings'
 import AlertsBell from './components/AlertsBell'
+import Account from './components/Account'
+import SyncConflictModal from './components/SyncConflictModal'
+import { useSync } from './sync/useSync'
 import { fireNotification, notificationPermission } from './notifications'
 
 export default function App() {
@@ -19,6 +22,9 @@ export default function App() {
   const recomputeAlerts = useStore((s) => s.recomputeAlerts)
   const markAlertNotified = useStore((s) => s.markAlertNotified)
   const replan = useStore((s) => s.replan)
+
+  // Restore session + drive cross-device sync (no-op when signed out).
+  useSync()
 
   // On load: refresh alerts and make sure the horizon is planned from today.
   useEffect(() => {
@@ -53,7 +59,10 @@ export default function App() {
               <span className="text-xl">🗓️</span>
               <h1 className="font-bold text-lg tracking-tight">ToDoToday</h1>
             </div>
-            <AlertsBell />
+            <div className="flex items-center gap-3">
+              <AlertsBell />
+              <Account />
+            </div>
           </div>
         </header>
         <Nav view={view} setView={setView} />
@@ -71,6 +80,8 @@ export default function App() {
       <footer className="text-center text-xs text-slate-400 py-4">
         ToDoToday · plans your day, locally in your browser
       </footer>
+
+      <SyncConflictModal />
     </div>
   )
 }

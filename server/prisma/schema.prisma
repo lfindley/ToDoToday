@@ -1,0 +1,69 @@
+// ToDoToday backend schema.
+// Design note: planner data is stored as a single JSON snapshot per user
+// (PlannerState.data) rather than normalized tables, so the backend stays
+// decoupled from the frontend domain model — see the plan for rationale.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  refreshTokens       RefreshToken[]
+  plannerState        PlannerState?
+  calendarConnections CalendarConnection[]
+}
+
+// Hashed, revocable refresh tokens — one row per active login (device/session).
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// The cross-device sync document: the whole planner state as opaque JSON,
+// with a monotonically increasing version for last-write-wins conflict checks.
+model PlannerState {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data      Json
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt
+}
+
+enum CalendarProvider {
+  outlook
+  apple
+  google
+}
+
+// Calendar links for live sync (schema only at this step — no provider logic yet).
+// Credentials/tokens are AES-256-GCM encrypted at rest (see calendar/crypto.ts).
+model CalendarConnection {
+  id             String           @id @default(cuid())
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       CalendarProvider
+  encryptedCreds String
+  syncState      Json?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@unique([userId, provider])
+  @@index([userId])
+}

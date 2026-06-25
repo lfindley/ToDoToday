@@ -1,4 +1,16 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import type { ScheduledBlock } from '../types'
+
+/** Color palette per block type, shared by the Today timeline and Week grid. */
+export const BLOCK_STYLES: Record<ScheduledBlock['type'], { bg: string; bar: string }> = {
+  meal: { bg: 'bg-amber-50 border-amber-200', bar: 'bg-amber-400' },
+  recurring: { bg: 'bg-violet-50 border-violet-200', bar: 'bg-violet-400' },
+  task: { bg: 'bg-sky-50 border-sky-200', bar: 'bg-sky-500' },
+  free: { bg: 'bg-emerald-50 border-emerald-200', bar: 'bg-emerald-400' },
+  buffer: { bg: 'bg-slate-50 border-slate-200', bar: 'bg-slate-300' },
+  sleep: { bg: 'bg-indigo-50 border-indigo-200', bar: 'bg-indigo-400' },
+  event: { bg: 'bg-rose-50 border-rose-200', bar: 'bg-rose-500' },
+}
 
 export const inputClass =
   'w-full px-3 py-2 rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none text-sm disabled:bg-slate-100'

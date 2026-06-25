@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useStore, type NewTaskInput } from '../store/useStore'
 import type { Task } from '../types'
 import { Button, Card, Field, inputClass, PriorityBadge, EmptyState } from './ui'
-import { formatDuration } from '../utils/time'
+import { displayTime, formatDuration } from '../utils/time'
 import { shortDate } from '../utils/date'
 
 interface FormState {
@@ -192,6 +192,7 @@ export default function Tasks() {
   const updateTask = useStore((s) => s.updateTask)
   const deleteTask = useStore((s) => s.deleteTask)
   const toggleTaskComplete = useStore((s) => s.toggleTaskComplete)
+  const fmt = useStore((s) => s.settings.timeFormat) ?? '24h'
   const [editingId, setEditingId] = useState<string | null>(null)
 
   const infeasibleIds = new Set(
@@ -274,8 +275,8 @@ export default function Tasks() {
                   )}
                   {t.deadline && <span>📅 due {shortDate(t.deadline)}</span>}
                   {t.maxPerDayMinutes && <span>≤ {formatDuration(t.maxPerDayMinutes)}/day</span>}
-                  {t.window?.earliest && <span>after {t.window.earliest}</span>}
-                  {t.window?.latest && <span>by {t.window.latest}</span>}
+                  {t.window?.earliest && <span>after {displayTime(t.window.earliest, fmt)}</span>}
+                  {t.window?.latest && <span>by {displayTime(t.window.latest, fmt)}</span>}
                 </div>
               </div>
               <div className="flex gap-1 shrink-0">

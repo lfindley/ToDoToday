@@ -33,7 +33,12 @@ const DEFAULT_TEMPLATE: DayTemplate = {
 }
 
 const DEFAULT_BUDGETS: Budgets = { productiveMinutesPerDay: 360, freeMinutesPerDay: 120 }
-const DEFAULT_SETTINGS: Settings = { hemisphere: 'north', bufferMinutes: 0, browserNotifications: false }
+const DEFAULT_SETTINGS: Settings = {
+  hemisphere: 'north',
+  bufferMinutes: 0,
+  browserNotifications: false,
+  timeFormat: '24h',
+}
 
 export interface NewTaskInput {
   title: string

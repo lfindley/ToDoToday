@@ -54,6 +54,7 @@ export default function Settings() {
   }
 
   const hours = (mins: number) => Math.round((mins / 60) * 10) / 10
+  const timeFormat = settings.timeFormat ?? '24h'
 
   return (
     <div className="space-y-4">
@@ -75,6 +76,35 @@ export default function Settings() {
               onChange={(e) => setSleep(e.target.value, template.sleep.wakeTime)}
             />
           </Field>
+        </div>
+      </Section>
+
+      <Section title="Clock format" subtitle="How times are displayed across the app.">
+        <div className="grid grid-cols-2 gap-2">
+          {([
+            { value: '24h', label: '24-hour', example: '14:00' },
+            { value: '12h', label: '12-hour', example: '2:00 PM' },
+          ] as const).map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setSettings({ timeFormat: opt.value })}
+              className={`px-3 py-2 rounded-lg text-sm font-medium border ${
+                timeFormat === opt.value
+                  ? 'bg-brand-600 text-white border-brand-600'
+                  : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+              }`}
+            >
+              {opt.label}
+              <span
+                className={`block text-[11px] font-normal ${
+                  timeFormat === opt.value ? 'text-brand-100' : 'text-slate-400'
+                }`}
+              >
+                {opt.example}
+              </span>
+            </button>
+          ))}
         </div>
       </Section>
 

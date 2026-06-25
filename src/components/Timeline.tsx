@@ -7,7 +7,7 @@ import {
 } from '@dnd-kit/core'
 import type { DayPlan } from '../types'
 import { useStore } from '../store/useStore'
-import { formatTime, parseTime } from '../utils/time'
+import { displayHour, parseTime } from '../utils/time'
 import BlockCard from './BlockCard'
 
 const PX = 1.1 // pixels per minute
@@ -15,6 +15,7 @@ const PX = 1.1 // pixels per minute
 export default function Timeline({ plan, dateISO }: { plan: DayPlan; dateISO: string }) {
   const template = useStore((s) => s.template)
   const moveBlock = useStore((s) => s.moveBlock)
+  const fmt = useStore((s) => s.settings.timeFormat) ?? '24h'
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }))
 
   const wake = parseTime(template.sleep.wakeTime)
@@ -47,7 +48,7 @@ export default function Timeline({ plan, dateISO }: { plan: DayPlan; dateISO: st
             style={{ top: (m - dayStart) * PX }}
           >
             <span className="text-[10px] text-slate-400 w-11 text-right pr-1.5 -mt-2 tabular-nums">
-              {formatTime(m)}
+              {displayHour(m, fmt)}
             </span>
             <div className="flex-1 border-t border-slate-100" />
           </div>

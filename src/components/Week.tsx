@@ -1,16 +1,25 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
+import type { ScheduledBlock, TimeFormat } from '../types'
 import { useStore } from '../store/useStore'
 import { addDaysISO, isoDate, isoToDate } from '../utils/date'
-import { formatDuration } from '../utils/time'
+import { displayHour, displayTime, parseTime } from '../utils/time'
 import { summariseDay, daySegments } from '../engine/daySummary'
-import { Button, Card, CapacityBar, Legend } from './ui'
+import { Button, Card, CapacityBar, Legend, BLOCK_STYLES } from './ui'
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const PX = 0.7 // pixels per minute (vertical scale of the grid)
+const MIN_COL = 96 // min day-column width before the grid scrolls horizontally
+const GUTTER = 44 // width of the left-hand hour gutter (px)
 
 function mondayOf(iso: string): string {
   const day = isoToDate(iso).getDay() // 0 Sun … 6 Sat
   return addDaysISO(iso, -((day + 6) % 7))
+}
+
+function nowMinutes(): number {
+  const d = new Date()
+  return d.getHours() * 60 + d.getMinutes()
 }
 
 export default function Week({ onOpenDay }: { onOpenDay: (iso: string) => void }) {
@@ -23,19 +32,41 @@ export default function Week({ onOpenDay }: { onOpenDay: (iso: string) => void }
   const template = useStore((s) => s.template)
   const budgets = useStore((s) => s.budgets)
   const dayPlans = useStore((s) => s.dayPlans)
-  const alerts = useStore((s) => s.alerts)
+  const settings = useStore((s) => s.settings)
   const replan = useStore((s) => s.replan)
+  const fmt = settings.timeFormat ?? '24h'
+
+  // Re-render each minute so the "now" line stays roughly current.
+  const [now, setNow] = useState(nowMinutes)
+  useEffect(() => {
+    const id = setInterval(() => setNow(nowMinutes()), 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   const summaryState = { tasks, recurring, events, template, budgets, dayPlans }
-  const infeasibleIds = new Set(
-    alerts.filter((a) => a.kind === 'infeasible' && !a.dismissed).map((a) => a.taskId),
-  )
-
   const days = Array.from({ length: 7 }, (_, i) => addDaysISO(weekStart, i))
   const weekEnd = days[6]
 
+  // Shared vertical scale across all 7 columns: the waking window, expanded to
+  // include any scheduled block that spills outside it so every day lines up.
+  const wake = parseTime(template.sleep.wakeTime)
+  const bed0 = parseTime(template.sleep.bedtime)
+  let dayStart = wake
+  let dayEnd = bed0 > wake ? bed0 : 24 * 60
+  for (const iso of days) {
+    for (const b of dayPlans[iso]?.blocks ?? []) {
+      dayStart = Math.min(dayStart, parseTime(b.start))
+      dayEnd = Math.max(dayEnd, parseTime(b.end))
+    }
+  }
+  const height = (dayEnd - dayStart) * PX
+
+  const hourLines: number[] = []
+  for (let m = Math.ceil(dayStart / 60) * 60; m <= dayEnd; m += 60) hourLines.push(m)
+
   return (
     <div className="space-y-4">
+      {/* Week navigation */}
       <div className="flex items-center justify-between gap-2">
         <Button variant="outline" onClick={() => setWeekStart(addDaysISO(weekStart, -7))}>
           ←
@@ -62,7 +93,7 @@ export default function Week({ onOpenDay }: { onOpenDay: (iso: string) => void }
             <Legend color="bg-violet-400" label="Recurring" />
             <Legend color="bg-sky-500" label="Tasks" />
             <Legend color="bg-emerald-400" label="Free" />
-            <Legend color="bg-slate-100 border border-slate-200" label="Slack" />
+            <Legend color="bg-rose-500" label="Events" />
           </div>
           <Button onClick={() => replan()} className="shrink-0">
             Re-plan
@@ -70,92 +101,151 @@ export default function Week({ onOpenDay }: { onOpenDay: (iso: string) => void }
         </div>
       </Card>
 
-      <div className="space-y-2">
-        {days.map((iso) => {
-          const d = summariseDay(iso, summaryState)
-          const isToday = iso === today
-          return (
-            <Card
-              key={iso}
-              className={`p-3 cursor-pointer hover:shadow transition-shadow ${isToday ? 'ring-2 ring-brand-500' : ''}`}
-            >
-              <div onClick={() => onOpenDay(iso)}>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-semibold text-slate-800">{WEEKDAYS[d.weekday]}</span>
-                    <span className="text-xs text-slate-400">{format(d.date, 'd MMM')}</span>
-                    {isToday && (
-                      <span className="text-[10px] font-semibold text-brand-700 bg-brand-50 px-1.5 py-0.5 rounded">
-                        today
+      {/* Hourly calendar grid — scrolls horizontally on narrow screens. */}
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <div style={{ minWidth: GUTTER + 7 * MIN_COL }}>
+            {/* Day headers */}
+            <div className="flex border-b border-slate-200">
+              <div className="shrink-0" style={{ width: GUTTER }} />
+              {days.map((iso) => {
+                const d = summariseDay(iso, summaryState)
+                const isToday = iso === today
+                return (
+                  <button
+                    key={iso}
+                    onClick={() => onOpenDay(iso)}
+                    style={{ minWidth: MIN_COL }}
+                    className={`flex-1 px-1.5 py-2 text-left border-l border-slate-100 hover:bg-slate-50 transition-colors ${
+                      isToday ? 'bg-brand-50' : ''
+                    }`}
+                  >
+                    <div className="flex items-baseline gap-1.5">
+                      <span className={`text-sm font-semibold ${isToday ? 'text-brand-700' : 'text-slate-800'}`}>
+                        {WEEKDAYS[d.weekday]}
                       </span>
-                    )}
-                  </div>
-                  <div className="text-[11px] text-slate-400">
-                    {d.planned ? `✓ ${formatDuration(d.planTaskMin)} tasks` : `${formatDuration(d.afterFixed)} free`}
-                  </div>
-                </div>
+                      <span className="text-[11px] text-slate-400">{format(d.date, 'd MMM')}</span>
+                    </div>
+                    <div className="mt-1.5">
+                      <CapacityBar segments={daySegments(d)} total={d.waking} height="h-1" />
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
 
-                <CapacityBar segments={daySegments(d)} total={d.waking} />
-
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {d.events.map((e) => (
-                    <Chip key={e.id} color="rose">
-                      📍 {e.title} {e.startTime}–{e.endTime}
-                    </Chip>
-                  ))}
-                  {d.fixed.map((r) => (
-                    <Chip key={r.id} color="violet">
-                      📌 {r.title} {r.startTime}–{r.endTime}
-                    </Chip>
-                  ))}
-                  {d.flex.map((r) => (
-                    <Chip key={r.id} color="violet">
-                      🔁 {r.title} · {formatDuration(r.durationMinutes ?? 0)}
-                    </Chip>
-                  ))}
-                  {Object.entries(d.planTaskMap).map(([title, mins]) => (
-                    <Chip key={title} color="sky">
-                      📝 {title} · {formatDuration(mins)}
-                    </Chip>
-                  ))}
-                  {d.deadlines.map((t) => (
-                    <Chip key={t.id} color={infeasibleIds.has(t.id) ? 'red' : 'amber'}>
-                      📅 due: {t.title}
-                      {infeasibleIds.has(t.id) ? ' ⚠' : ''}
-                    </Chip>
-                  ))}
-                  {d.overcommitted && <Chip color="red">⚠ over-committed</Chip>}
-                  {d.events.length === 0 &&
-                    d.fixed.length === 0 &&
-                    d.flex.length === 0 &&
-                    d.deadlines.length === 0 &&
-                    Object.keys(d.planTaskMap).length === 0 &&
-                    !d.overcommitted && (
-                      <span className="text-[11px] text-slate-400">No commitments or deadlines</span>
-                    )}
-                </div>
+            {/* Hour grid + blocks */}
+            <div className="flex relative" style={{ height }}>
+              {/* Hour gutter */}
+              <div className="relative shrink-0" style={{ width: GUTTER }}>
+                {hourLines.map((m) => (
+                  <span
+                    key={m}
+                    className="absolute right-1.5 -translate-y-1/2 text-[10px] text-slate-400 tabular-nums"
+                    style={{ top: (m - dayStart) * PX }}
+                  >
+                    {displayHour(m, fmt)}
+                  </span>
+                ))}
               </div>
-            </Card>
-          )
-        })}
-      </div>
+
+              {/* Day columns */}
+              {days.map((iso) => {
+                const plan = dayPlans[iso]
+                const isToday = iso === today
+                return (
+                  <div
+                    key={iso}
+                    onClick={() => onOpenDay(iso)}
+                    style={{ minWidth: MIN_COL }}
+                    className={`flex-1 relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/40 ${
+                      isToday ? 'bg-brand-50/40' : ''
+                    }`}
+                  >
+                    {/* Hour gridlines */}
+                    {hourLines.map((m) => (
+                      <div
+                        key={m}
+                        className="absolute left-0 right-0 border-t border-slate-100"
+                        style={{ top: (m - dayStart) * PX }}
+                      />
+                    ))}
+
+                    {/* Current-time line (today only) */}
+                    {isToday && now >= dayStart && now <= dayEnd && (
+                      <div
+                        className="absolute left-0 right-0 z-20 pointer-events-none"
+                        style={{ top: (now - dayStart) * PX }}
+                      >
+                        <div className="absolute -left-0.5 -top-1 w-1.5 h-1.5 rounded-full bg-red-500" />
+                        <div className="h-px bg-red-500" />
+                      </div>
+                    )}
+
+                    {/* Scheduled blocks */}
+                    {(plan?.blocks ?? []).map((b) => (
+                      <WeekBlock
+                        key={b.id}
+                        block={b}
+                        top={(parseTime(b.start) - dayStart) * PX}
+                        height={(parseTime(b.end) - parseTime(b.start)) * PX}
+                        fmt={fmt}
+                      />
+                    ))}
+
+                    {!plan && (
+                      <div className="absolute inset-x-0 top-2 text-center text-[10px] text-slate-300">
+                        no plan
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <p className="text-[11px] text-slate-400 text-center">Tap any day to open and edit its plan.</p>
     </div>
   )
 }
 
-function Chip({
-  color,
-  children,
+function WeekBlock({
+  block,
+  top,
+  height,
+  fmt,
 }: {
-  color: 'violet' | 'amber' | 'red' | 'sky' | 'rose'
-  children: React.ReactNode
+  block: ScheduledBlock
+  top: number
+  height: number
+  fmt: TimeFormat
 }) {
-  const styles: Record<string, string> = {
-    violet: 'bg-violet-50 text-violet-700 border-violet-200',
-    amber: 'bg-amber-50 text-amber-700 border-amber-200',
-    red: 'bg-red-50 text-red-700 border-red-200',
-    sky: 'bg-sky-50 text-sky-700 border-sky-200',
-    rose: 'bg-rose-50 text-rose-700 border-rose-200',
-  }
-  return <span className={`text-[11px] px-1.5 py-0.5 rounded border ${styles[color]}`}>{children}</span>
+  const s = BLOCK_STYLES[block.type] ?? BLOCK_STYLES.buffer
+  const h = Math.max(13, height)
+  const showTime = h >= 32
+  return (
+    <div
+      className={`absolute left-0.5 right-0.5 rounded border overflow-hidden ${s.bg} ${
+        block.done ? 'opacity-50' : ''
+      } ${block.proposed ? 'border-dashed' : ''}`}
+      style={{ top, height: h }}
+      title={`${block.title} · ${displayTime(block.start, fmt)}–${displayTime(block.end, fmt)}`}
+    >
+      <div className={`absolute left-0 top-0 bottom-0 w-0.5 ${s.bar}`} />
+      <div
+        className={`pl-1.5 pr-1 pt-0.5 text-[10px] leading-tight font-medium truncate ${
+          block.done ? 'line-through text-slate-400' : 'text-slate-700'
+        }`}
+      >
+        {block.title}
+      </div>
+      {showTime && (
+        <div className="pl-1.5 pr-1 text-[9px] text-slate-400 tabular-nums truncate">
+          {displayTime(block.start, fmt)}
+        </div>
+      )}
+    </div>
+  )
 }

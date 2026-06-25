@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useStore } from '../store/useStore'
 import type { DayPlan } from '../types'
 import { addDaysISO, isoDate, isoToDate, prettyDate } from '../utils/date'
-import { formatDuration, parseTime } from '../utils/time'
+import { displayTime, formatDuration, parseTime } from '../utils/time'
 import { seasonForDate, SEASON_EMOJI, SEASON_LABEL } from '../engine/season'
 import { suggestActivities } from '../engine/suggestions'
 import Timeline from './Timeline'
@@ -66,6 +66,7 @@ export default function Today({
           .reduce((a, b) => a + parseTime(b.end) - parseTime(b.start), 0)
       : 0
 
+  const fmt = settings.timeFormat ?? '24h'
   const date = isoToDate(dateISO)
   const season = seasonForDate(date, settings.hemisphere)
   const ideas = suggestActivities(
@@ -103,7 +104,7 @@ export default function Today({
         </div>
         <div className="flex items-center justify-between text-xs text-slate-500">
           <span>
-            😴 Asleep {template.sleep.bedtime} – {template.sleep.wakeTime}
+            😴 Asleep {displayTime(template.sleep.bedtime, fmt)} – {displayTime(template.sleep.wakeTime, fmt)}
           </span>
           <div className="flex gap-2">
             <Button variant="ghost" onClick={() => replan(undefined, true)} title="Re-plan the week, discarding locked blocks">

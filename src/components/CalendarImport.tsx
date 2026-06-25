@@ -3,12 +3,14 @@ import { useStore } from '../store/useStore'
 import type { CalendarEvent } from '../types'
 import { parseICS } from '../utils/ics'
 import { shortDate } from '../utils/date'
+import { displayTime } from '../utils/time'
 import { Button } from './ui'
 
 export default function CalendarImport() {
   const importEvents = useStore((s) => s.importEvents)
   const clearImportedEvents = useStore((s) => s.clearImportedEvents)
   const importedCount = useStore((s) => s.events.filter((e) => e.source === 'import').length)
+  const fmt = useStore((s) => s.settings.timeFormat) ?? '24h'
 
   const inputRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<CalendarEvent[] | null>(null)
@@ -77,7 +79,7 @@ export default function CalendarImport() {
                 <span className="truncate">{e.title}</span>
                 <span className="whitespace-nowrap text-slate-400">
                   {shortDate(e.date)}
-                  {e.allDay ? ' · all day' : ` · ${e.startTime}–${e.endTime}`}
+                  {e.allDay ? ' · all day' : ` · ${displayTime(e.startTime, fmt)}–${displayTime(e.endTime, fmt)}`}
                 </span>
               </li>
             ))}

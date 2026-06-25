@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useStore } from '../store/useStore'
-import type { Category, RecurringTask } from '../types'
+import type { Category, RecurringTask, TimeFormat } from '../types'
 import { Button, Card, Field, inputClass, EmptyState } from './ui'
 import { recurringDays } from '../engine/recurrence'
-import { formatDuration } from '../utils/time'
+import { displayTime, formatDuration } from '../utils/time'
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const CATEGORIES: { value: Category; label: string }[] = [
@@ -234,13 +234,16 @@ function RecurringForm({
   )
 }
 
-function summary(r: RecurringTask): string {
+function summary(r: RecurringTask, fmt: TimeFormat): string {
   if (r.scheduleType === 'fixed') {
     const days = (r.days ?? []).map((d) => WEEKDAYS[d]).join(', ')
-    return `${days} · ${r.startTime}–${r.endTime}`
+    return `${days} · ${displayTime(r.startTime ?? '', fmt)}–${displayTime(r.endTime ?? '', fmt)}`
   }
   const days = recurringDays(r).map((d) => WEEKDAYS[d]).join(', ')
-  const win = [r.window?.earliest && `after ${r.window.earliest}`, r.window?.latest && `by ${r.window.latest}`]
+  const win = [
+    r.window?.earliest && `after ${displayTime(r.window.earliest, fmt)}`,
+    r.window?.latest && `by ${displayTime(r.window.latest, fmt)}`,
+  ]
     .filter(Boolean)
     .join(', ')
   return `${r.timesPerWeek}×/week · ${formatDuration(r.durationMinutes ?? 0)} · ${days}${win ? ` · ${win}` : ''}`
@@ -251,6 +254,7 @@ export default function Recurring() {
   const addRecurring = useStore((s) => s.addRecurring)
   const updateRecurring = useStore((s) => s.updateRecurring)
   const deleteRecurring = useStore((s) => s.deleteRecurring)
+  const fmt = useStore((s) => s.settings.timeFormat) ?? '24h'
   const [editingId, setEditingId] = useState<string | null>(null)
 
   return (
@@ -285,7 +289,7 @@ export default function Recurring() {
               <span className="text-lg">{r.scheduleType === 'fixed' ? '📌' : '🔁'}</span>
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-slate-800">{r.title}</div>
-                <div className="text-xs text-slate-500 mt-0.5">{summary(r)}</div>
+                <div className="text-xs text-slate-500 mt-0.5">{summary(r, fmt)}</div>
               </div>
               <div className="flex gap-1 shrink-0">
                 <Button variant="ghost" onClick={() => setEditingId(r.id)}>

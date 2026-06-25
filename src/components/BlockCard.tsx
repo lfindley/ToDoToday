@@ -1,16 +1,8 @@
 import { useDraggable } from '@dnd-kit/core'
 import type { ScheduledBlock } from '../types'
 import { useStore } from '../store/useStore'
-
-const STYLES: Record<ScheduledBlock['type'], { bg: string; bar: string }> = {
-  meal: { bg: 'bg-amber-50 border-amber-200', bar: 'bg-amber-400' },
-  recurring: { bg: 'bg-violet-50 border-violet-200', bar: 'bg-violet-400' },
-  task: { bg: 'bg-sky-50 border-sky-200', bar: 'bg-sky-500' },
-  free: { bg: 'bg-emerald-50 border-emerald-200', bar: 'bg-emerald-400' },
-  buffer: { bg: 'bg-slate-50 border-slate-200', bar: 'bg-slate-300' },
-  sleep: { bg: 'bg-indigo-50 border-indigo-200', bar: 'bg-indigo-400' },
-  event: { bg: 'bg-rose-50 border-rose-200', bar: 'bg-rose-500' },
-}
+import { displayTime } from '../utils/time'
+import { BLOCK_STYLES } from './ui'
 
 export default function BlockCard({
   block,
@@ -28,6 +20,7 @@ export default function BlockCard({
   const deleteEvent = useStore((s) => s.deleteEvent)
   const acceptProposal = useStore((s) => s.acceptProposal)
   const dismissProposal = useStore((s) => s.dismissProposal)
+  const fmt = useStore((s) => s.settings.timeFormat) ?? '24h'
   const isEvent = block.type === 'event'
   const isProposed = !!block.proposed
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: block.id })
@@ -38,7 +31,7 @@ export default function BlockCard({
     transform: transform ? `translateY(${transform.y}px)` : undefined,
     zIndex: isDragging ? 40 : undefined,
   }
-  const s = STYLES[block.type] ?? STYLES.buffer
+  const s = BLOCK_STYLES[block.type] ?? BLOCK_STYLES.buffer
   const compact = height < 46
 
   return (
@@ -82,7 +75,7 @@ export default function BlockCard({
             {block.title}
           </span>
           <span className="text-[11px] text-slate-400 shrink-0 tabular-nums">
-            {block.start}–{block.end}
+            {displayTime(block.start, fmt)}–{displayTime(block.end, fmt)}
           </span>
           {isProposed ? (
             <span className="shrink-0 flex items-center gap-1">

@@ -4,6 +4,7 @@ export type Priority = number // integer 1–10, 10 = highest
 export type Category = 'productive' | 'health' | 'personal' | 'commitment'
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter'
 export type Hemisphere = 'north' | 'south'
+export type TimeFormat = '24h' | '12h'
 
 /** Optional "do after / finish by" bounds within a single day, as "HH:mm". */
 export interface TimeWindow {
@@ -119,4 +120,5 @@ export interface Settings {
   hemisphere: Hemisphere
   bufferMinutes: number // gap inserted after task blocks
   browserNotifications: boolean
+  timeFormat: TimeFormat // how clock times are shown across the app
 }

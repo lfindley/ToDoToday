@@ -5,3 +5,8 @@ dist-ssr
 .DS_Store
 .vscode/*
 !.vscode/extensions.json
+
+# Secrets / env (keep .env.example tracked)
+.env
+.env.*
+!.env.example

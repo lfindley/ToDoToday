@@ -89,22 +89,32 @@ Tests run against an in-memory repository, so they don't touch Postgres.
 Access tokens expire after 15 minutes; use `/auth/refresh` with the refresh
 token (valid 30 days, revocable) to get a new one.
 
-## Frontend integration (later)
+## Frontend integration
 
-`src/api/client.ts` (in the frontend) already wraps these endpoints. Point the
-app at the API by adding to the **repo-root** `.env`:
+The frontend is already wired to sync against this API (login/register UI,
+pull-on-sign-in, debounced push, and conflict resolution — see `src/store/useAuth.ts`
+and `src/sync/`). Point the app at the API by adding to the **repo-root** `.env`:
 
 ```
 VITE_API_URL=http://localhost:8787
 ```
 
-Wiring the store to actually sync (login UI, pull/push) is the next planned step.
+Signed out, the app stays fully local; signing in turns on cross-device sync.
 
-## Deploying (later)
+## Deploying
+
+The repo ships ready-to-use config for a free-tier deploy:
 
 - **Database:** Neon (free tier) — already cloud-hosted.
-- **API:** Render free web service or Fly.io. Set the same env vars there; run
-  `npm run build` then `npm start`. Note free hosts sleep when idle, so
-  background sync waits for a small paid tier — on-demand sync works regardless.
-- **Frontend:** Vercel/Netlify (set `VITE_API_URL` to the deployed API origin,
-  and add that origin to the API's `CORS_ORIGIN`).
+- **API:** [`render.yaml`](../render.yaml) at the repo root is a Render Blueprint.
+  In Render, choose **New + → Blueprint**, point it at the repo, and set the
+  secret env vars (`DATABASE_URL`, `ENCRYPTION_KEY`, `CORS_ORIGIN`; `JWT_SECRET`
+  is auto-generated). Its build runs `prisma db push` to create the tables from
+  `schema.prisma` — no migration history is committed yet, so there's nothing to
+  run by hand. (To switch to migrations later, commit a `prisma/migrations/`
+  folder and use `prisma migrate deploy` instead.) Note: free hosts sleep when
+  idle, so the first request after a lull is slow; on-demand sync still works.
+- **Frontend:** [`netlify.toml`](../netlify.toml) sets the build/publish for
+  Netlify; Vercel needs no config (it auto-detects Vite). Either way, set
+  `VITE_API_URL` to the deployed API origin and add that origin to the API's
+  `CORS_ORIGIN`.

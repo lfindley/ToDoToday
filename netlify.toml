@@ -1,0 +1,15 @@
+# Netlify config for the ToDoToday frontend (static Vite SPA at the repo root).
+#
+# To enable cross-device sync, set VITE_API_URL in Netlify → Site settings →
+# Environment variables to your deployed API origin
+# (e.g. https://todotoday-api.onrender.com). Leave it unset to stay local-only.
+# Vercel works too with no config — it auto-detects Vite; just set VITE_API_URL.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA fallback so a hard refresh on any path still serves the app.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

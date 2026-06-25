@@ -1,0 +1,36 @@
+# Render Blueprint for the ToDoToday backend API (free web service).
+#
+# Deploy: push this repo to GitHub, then in Render → "New +" → "Blueprint" and
+# point it at the repo. Fill in the secret env vars below in the dashboard.
+# The database is external — create a free Neon Postgres (https://neon.tech) and
+# paste its connection string into DATABASE_URL.
+# Blueprint spec: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: todotoday-api
+    runtime: node
+    rootDir: server
+    plan: free
+    # `prisma db push` syncs schema.prisma to the database (no migration history
+    # is committed yet); it is idempotent, so it is safe to run on every deploy.
+    buildCommand: >-
+      npm install &&
+      npm run prisma:generate &&
+      npm run build &&
+      npx prisma db push --skip-generate
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      # Neon Postgres connection string (already includes ?sslmode=require).
+      - key: DATABASE_URL
+        sync: false
+      # 32-byte base64 key for AES-256-GCM. Must decode to exactly 32 bytes:
+      #   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+      - key: ENCRYPTION_KEY
+        sync: false
+      # Comma-separated allowed origins — your deployed frontend URL(s).
+      - key: CORS_ORIGIN
+        sync: false
+      # JWT signing secret — let Render generate a strong random value once.
+      - key: JWT_SECRET
+        generateValue: true

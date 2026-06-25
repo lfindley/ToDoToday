@@ -2,7 +2,7 @@
 
 ToDoToday turns the things in your life into a concrete, minute-by-minute plan for each day. You describe your routine once — sleep, meals, fixed commitments, recurring activities, one-off tasks with deadlines, and the things you enjoy — and ToDoToday automatically lays out a realistic schedule, spreads long tasks across multiple days to hit their deadlines, and warns you when a deadline won't fit.
 
-It runs entirely in your browser. There's no account, no server, and no tracking — all your data is stored locally on your device.
+It runs entirely in your browser — no account required, and your data is stored locally on your device. An **optional account** adds cross-device sync if you want it; signed out, the app stays fully local.
 
 ## Features
 
@@ -12,10 +12,13 @@ It runs entirely in your browser. There's no account, no server, and no tracking
 - **Recurring activities** — fixed weekly commitments (work, classes) and flexible goals (e.g. gym 3×/week) that the planner fits into your free gaps.
 - **One-off events** — dated appointments that anchor the day around them.
 - **Calendar import** — import appointments from an `.ics` file exported from Outlook or Apple Calendar (Settings → Import calendar). Imported events become anchors the planner schedules around, with de-duplication on re-import and support for all-day and basic recurring events.
+- **Calendar export** — download any day (Today) or week (Week) as an `.ics` file and import the generated plan into Outlook / Apple / Google Calendar.
 - **Interactive suggestions** — when you have free time (or you pick a window), ToDoToday proposes either one of your pending tasks or a season/interest activity; approve it to drop it into your plan, or dismiss it. Free-time activity ideas are tailored to your interests and the current season.
 - **Feasibility alerts** — get warned when there isn't enough time to finish a task before its deadline, plus reminders 2 days / 1 day / on the day.
 - **Week & month overviews** — capacity bars showing how committed, busy, or free each day is.
 - **Drag to adjust** — drag a block to reschedule it; edited blocks are locked so they survive a replan.
+- **12/24-hour clock** — switch between 24-hour and 12-hour time display (Settings → Clock format).
+- **Cross-device sync (optional)** — create an account to sync your planner across devices; conflicts are detected and you choose which copy wins. Requires running the [backend](server/SETUP.md); without it the app is fully local.
 - **Optional browser notifications** — deadline toasts while the app is open.
 
 ## Tech stack
@@ -57,16 +60,19 @@ The planner works internally in minutes-from-midnight. For each day it places ha
 
 ## Data & privacy
 
-All data lives in your browser's `localStorage` (key: `todotoday`). Nothing is sent anywhere. Clearing your browser data, or using a different browser or device, will start you fresh — there is currently no sync or backup. (Calendar import reads `.ics` files locally in the browser; it does not connect to any calendar service yet — see the roadmap.)
+By default all data lives in your browser's `localStorage` (key: `todotoday`) and nothing is sent anywhere. Clearing your browser data, or using a different browser or device, starts you fresh.
+
+If you opt in to an **account** (by running the optional [backend](server/SETUP.md) and signing in), your planner is synced to that server so it follows you across devices; passwords are hashed and sessions use short-lived access tokens with rotating refresh tokens. Signed out, the app remains entirely local. (Calendar import reads `.ics` files locally in the browser; live two-way calendar service sync is still on the roadmap.)
 
 ## Roadmap
 
-Planned, roughly in order. The near-term goal is two-way calendar sync; the bigger architectural step is an optional, personal backend that the live-sync features require.
+Planned, roughly in order. The backend and cross-device planner sync now exist; the next big step is live, two-way calendar service sync.
 
 - [x] **Calendar import (`.ics` file)** — pull Outlook/Apple appointments in.
 - [x] **Interactive suggestions** — suggest a task or activity for free time and approve it into the plan.
-- [ ] **Calendar export (`.ics`)** — push the generated plan out to your calendar.
-- [ ] **Personal backend** — a small, single-user backend to securely hold credentials/tokens and run sync server-side. Keeps scope small (no public accounts).
+- [x] **Calendar export (`.ics`)** — download the generated plan and import it into your calendar.
+- [x] **Personal backend** — a small, single-user backend (accounts + server-side planner sync), with schema/encryption foundations for calendar credentials. See [`server/`](server/SETUP.md).
+- [x] **Cross-device sync** — optional account that syncs the planner across devices, with conflict resolution.
 - [ ] **Live Outlook sync** — automatic, refreshing sync via the Microsoft Graph API.
 - [ ] **Live Apple sync** — via CalDAV (using an app-specific password and a server-side proxy).
 - [ ] **Two-way sync** — edits flow in both directions for Outlook and Apple.
@@ -80,4 +86,4 @@ Google Calendar isn't a current priority but would be a straightforward add alon
 
 ## Project status
 
-Early and actively evolving (v0.1.0). It's currently a local-only, single-user app; live calendar sync and an optional backend are on the [roadmap](#roadmap).
+Early and actively evolving (v0.1.0). The core is a local-only, single-user app; an optional backend adds accounts and cross-device planner sync. Live two-way calendar service sync is still on the [roadmap](#roadmap).

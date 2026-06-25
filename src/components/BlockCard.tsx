@@ -26,7 +26,10 @@ export default function BlockCard({
   const toggleBlockDone = useStore((s) => s.toggleBlockDone)
   const setBlockLocked = useStore((s) => s.setBlockLocked)
   const deleteEvent = useStore((s) => s.deleteEvent)
+  const acceptProposal = useStore((s) => s.acceptProposal)
+  const dismissProposal = useStore((s) => s.dismissProposal)
   const isEvent = block.type === 'event'
+  const isProposed = !!block.proposed
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: block.id })
 
   const style: React.CSSProperties = {
@@ -44,12 +47,14 @@ export default function BlockCard({
       style={style}
       className={`absolute left-12 right-1 rounded-lg border ${s.bg} overflow-hidden ${
         isDragging ? 'shadow-lg ring-2 ring-brand-400' : 'shadow-sm'
-      } ${block.done ? 'opacity-50' : ''}`}
+      } ${block.done ? 'opacity-50' : ''} ${
+        isProposed ? 'border-dashed border-2 opacity-80 ring-1 ring-brand-300' : ''
+      }`}
     >
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${s.bar}`} />
       <div className="pl-3 pr-2 py-1.5 h-full flex flex-col justify-center">
         <div className="flex items-center gap-1.5">
-          {!isEvent && (
+          {!isEvent && !isProposed && (
             <button
               {...attributes}
               {...listeners}
@@ -61,7 +66,7 @@ export default function BlockCard({
             </button>
           )}
           {isEvent && <span className="text-rose-400 px-0.5">📍</span>}
-          {block.type === 'task' && (
+          {block.type === 'task' && !isProposed && (
             <input
               type="checkbox"
               className="h-4 w-4 accent-brand-600"
@@ -79,7 +84,26 @@ export default function BlockCard({
           <span className="text-[11px] text-slate-400 shrink-0 tabular-nums">
             {block.start}–{block.end}
           </span>
-          {isEvent ? (
+          {isProposed ? (
+            <span className="shrink-0 flex items-center gap-1">
+              <button
+                onClick={() => acceptProposal(dateISO, block.id)}
+                title="Accept this suggestion"
+                aria-label="Accept suggestion"
+                className="text-xs font-semibold text-emerald-600 hover:text-emerald-700"
+              >
+                ✓ Accept
+              </button>
+              <button
+                onClick={() => dismissProposal(dateISO, block.id)}
+                title="Dismiss this suggestion"
+                aria-label="Dismiss suggestion"
+                className="text-xs text-slate-400 hover:text-red-500"
+              >
+                ✕ Dismiss
+              </button>
+            </span>
+          ) : isEvent ? (
             <button
               onClick={() => block.refId && deleteEvent(block.refId)}
               title="Delete event"

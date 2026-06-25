@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '../store/useStore'
+import type { DayPlan } from '../types'
 import { addDaysISO, isoDate, isoToDate, prettyDate } from '../utils/date'
 import { formatDuration, parseTime } from '../utils/time'
 import { seasonForDate, SEASON_EMOJI, SEASON_LABEL } from '../engine/season'
@@ -24,6 +25,20 @@ function StatBar({ label, used, budget, color }: { label: string; used: number; 
   )
 }
 
+/**
+ * Find the next free gap in a day's plan: the longest stretch tagged as a
+ * 'free' block (the scheduler's leftover time), preferring the earliest one.
+ * Falls back to a default mid-afternoon window if the plan has no free blocks.
+ */
+function nextFreeWindow(plan: DayPlan | undefined): { startMin: number; endMin: number } {
+  const frees = (plan?.blocks ?? [])
+    .filter((b) => b.type === 'free' && !b.proposed)
+    .map((b) => ({ startMin: parseTime(b.start), endMin: parseTime(b.end) }))
+    .sort((a, b) => a.startMin - b.startMin)
+  if (frees.length) return frees[0]
+  return { startMin: 14 * 60, endMin: 15 * 60 } // 14:00–15:00 fallback
+}
+
 export default function Today({
   dateISO,
   setDateISO,
@@ -35,7 +50,9 @@ export default function Today({
   const dayPlans = useStore((s) => s.dayPlans)
   const replan = useStore((s) => s.replan)
   const addEvent = useStore((s) => s.addEvent)
+  const proposeForWindow = useStore((s) => s.proposeForWindow)
   const [eventForm, setEventForm] = useState({ open: false, title: '', start: '09:00', end: '10:00' })
+  const [suggestForm, setSuggestForm] = useState({ open: false, start: '14:00', end: '15:00' })
   const budgets = useStore((s) => s.budgets)
   const template = useStore((s) => s.template)
   const interests = useStore((s) => s.interests)
@@ -163,6 +180,58 @@ export default function Today({
         )}
       </Card>
 
+      {/* Got free time? — propose a task or activity for a chosen window */}
+      <Card className="p-3">
+        {!suggestForm.open ? (
+          <button
+            onClick={() => setSuggestForm((f) => ({ ...f, open: true }))}
+            className="text-sm text-brand-600 font-medium hover:underline"
+          >
+            💡 Got free time? Suggest something
+          </button>
+        ) : (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (suggestForm.start < suggestForm.end) {
+                proposeForWindow(dateISO, parseTime(suggestForm.start), parseTime(suggestForm.end))
+                setSuggestForm({ open: false, start: '14:00', end: '15:00' })
+              }
+            }}
+            className="space-y-2"
+          >
+            <p className="text-xs text-slate-500">
+              Pick a window and we’ll propose a pending task or a season idea to approve.
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                type="time"
+                className={`${inputClass} w-32`}
+                value={suggestForm.start}
+                onChange={(e) => setSuggestForm((f) => ({ ...f, start: e.target.value }))}
+              />
+              <span className="text-slate-400">–</span>
+              <input
+                type="time"
+                className={`${inputClass} w-32`}
+                value={suggestForm.end}
+                onChange={(e) => setSuggestForm((f) => ({ ...f, end: e.target.value }))}
+              />
+              <Button type="submit" disabled={suggestForm.start >= suggestForm.end}>
+                Suggest
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setSuggestForm({ open: false, start: '14:00', end: '15:00' })}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        )}
+      </Card>
+
       {/* Timeline */}
       {plan && plan.blocks.length > 0 ? (
         <Card className="p-3">
@@ -193,9 +262,19 @@ export default function Today({
         ) : (
           <ul className="space-y-1.5">
             {ideas.map((idea, i) => (
-              <li key={i} className="text-sm text-slate-700 flex items-start gap-2">
+              <li key={i} className="text-sm text-slate-700 flex items-start gap-2 group">
                 <span className="text-emerald-500">•</span>
-                {idea}
+                <span className="flex-1">{idea}</span>
+                <button
+                  onClick={() => {
+                    const w = nextFreeWindow(plan)
+                    proposeForWindow(dateISO, w.startMin, w.endMin)
+                  }}
+                  className="text-xs text-brand-600 font-medium hover:underline shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                  title="Propose this for your next free gap"
+                >
+                  + Add to plan
+                </button>
               </li>
             ))}
           </ul>

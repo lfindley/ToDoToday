@@ -19,6 +19,7 @@ import { uid } from '../utils/id'
 import { isoDate, isoToDate } from '../utils/date'
 import { parseTime, formatTime } from '../utils/time'
 import { planHorizon } from '../engine/scheduler'
+import { suggestForGap } from '../engine/suggestionProposals'
 import { computeAlerts } from '../engine/alerts'
 import { INTEREST_LABEL } from '../data/interests'
 
@@ -265,14 +266,66 @@ export const useStore = create<StoreState>()(
         },
 
         // --- Interactive suggestions: implemented by Agent B. ---
-        proposeForWindow: (_dateISO, _startMin, _endMin) => {
-          // TODO(suggestions): insert a `proposed` block for the chosen window.
+        proposeForWindow: (dateISO, startMin, endMin) => {
+          const gap = endMin - startMin
+          if (gap <= 0) return
+          // Make sure a plan exists for this day before inserting into it.
+          if (!get().dayPlans[dateISO]) get().replan(dateISO)
+
+          const s = get()
+          const proposals = suggestForGap(gap, {
+            tasks: s.tasks,
+            interestKeys: s.interests.map((i) => i.categoryKey),
+            date: isoToDate(dateISO),
+            hemisphere: s.settings.hemisphere,
+          })
+          const pick = proposals[0]
+          if (!pick) return
+
+          const start = formatTime(startMin)
+          const end = formatTime(startMin + pick.durationMinutes)
+          const block: ScheduledBlock =
+            pick.kind === 'task'
+              ? { id: uid('blk'), type: 'task', title: pick.title, start, end, refId: pick.refId, proposed: true }
+              : { id: uid('blk'), type: 'free', title: 'Free time', start, end, suggestion: pick.suggestion, proposed: true }
+
+          set((st) => {
+            const plan = st.dayPlans[dateISO]
+            if (!plan) return {}
+            const blocks = [...plan.blocks, block].sort(
+              (a, b) => parseTime(a.start) - parseTime(b.start),
+            )
+            return { dayPlans: { ...st.dayPlans, [dateISO]: { ...plan, blocks } } }
+          })
         },
-        acceptProposal: (_dateISO, _blockId) => {
-          // TODO(suggestions): set proposed:false, locked:true on the block.
+        acceptProposal: (dateISO, blockId) => {
+          set((s) => {
+            const plan = s.dayPlans[dateISO]
+            if (!plan) return {}
+            return {
+              dayPlans: {
+                ...s.dayPlans,
+                [dateISO]: {
+                  ...plan,
+                  blocks: plan.blocks.map((b) =>
+                    b.id === blockId ? { ...b, proposed: false, locked: true } : b,
+                  ),
+                },
+              },
+            }
+          })
         },
-        dismissProposal: (_dateISO, _blockId) => {
-          // TODO(suggestions): remove the proposed block.
+        dismissProposal: (dateISO, blockId) => {
+          set((s) => {
+            const plan = s.dayPlans[dateISO]
+            if (!plan) return {}
+            return {
+              dayPlans: {
+                ...s.dayPlans,
+                [dateISO]: { ...plan, blocks: plan.blocks.filter((b) => b.id !== blockId) },
+              },
+            }
+          })
         },
 
         toggleInterest: (categoryKey) => {

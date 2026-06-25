@@ -237,11 +237,31 @@ export const useStore = create<StoreState>()(
         },
 
         // --- Calendar import (.ics): implemented by Agent A. ---
-        importEvents: (_events) => {
-          // TODO(calendar-import): merge by externalId, tag source:'import', then replan.
+        importEvents: (incoming) => {
+          set((s) => {
+            // Index existing imported events by externalId so a re-import replaces
+            // the matching event in place. Manually-added events are left untouched.
+            const byExternalId = new Map<string, CalendarEvent>()
+            for (const e of s.events) {
+              if (e.source === 'import' && e.externalId) byExternalId.set(e.externalId, e)
+            }
+            for (const e of incoming) {
+              const tagged: CalendarEvent = { ...e, id: e.id || uid('evt'), source: 'import' }
+              if (tagged.externalId) byExternalId.set(tagged.externalId, tagged)
+            }
+            // Keep manual events and imported events without an externalId, then
+            // append the merged-by-externalId set plus any incoming without an id.
+            const kept = s.events.filter((e) => e.source !== 'import' || !e.externalId)
+            const appended = incoming
+              .filter((e) => !e.externalId)
+              .map((e) => ({ ...e, id: e.id || uid('evt'), source: 'import' as const }))
+            return { events: [...kept, ...byExternalId.values(), ...appended] }
+          })
+          get().replan(isoDate())
         },
         clearImportedEvents: () => {
-          // TODO(calendar-import): drop events where source === 'import', then replan.
+          set((s) => ({ events: s.events.filter((e) => e.source !== 'import') }))
+          get().replan(isoDate())
         },
 
         // --- Interactive suggestions: implemented by Agent B. ---

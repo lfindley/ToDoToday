@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useStore } from '../store/useStore'
 import type { Hemisphere } from '../types'
 import { Button, Card, Field, inputClass } from './ui'
+import CalendarImport from './CalendarImport'
 import { INTEREST_CATEGORIES } from '../data/interests'
 import {
   notificationPermission,
@@ -237,6 +238,10 @@ export default function Settings() {
             Notifications are blocked in your browser settings — in-app alerts still work.
           </p>
         )}
+      </Section>
+
+      <Section title="Import calendar" subtitle="Bring in appointments from an .ics export.">
+        <CalendarImport />
       </Section>
 
       <Section title="Data">

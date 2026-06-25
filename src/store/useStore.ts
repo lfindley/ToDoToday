@@ -71,6 +71,15 @@ interface StoreState {
   updateEvent: (id: string, patch: Partial<CalendarEvent>) => void
   deleteEvent: (id: string) => void
 
+  // Calendar import (.ics) — implemented by the calendar-import feature.
+  importEvents: (events: CalendarEvent[]) => void
+  clearImportedEvents: () => void
+
+  // Interactive suggestions — implemented by the suggestions feature.
+  proposeForWindow: (dateISO: string, startMin: number, endMin: number) => void
+  acceptProposal: (dateISO: string, blockId: string) => void
+  dismissProposal: (dateISO: string, blockId: string) => void
+
   // Interests
   toggleInterest: (categoryKey: string) => void
   addCustomInterest: (label: string) => void
@@ -225,6 +234,25 @@ export const useStore = create<StoreState>()(
         deleteEvent: (id) => {
           set((s) => ({ events: s.events.filter((e) => e.id !== id) }))
           get().replan(isoDate())
+        },
+
+        // --- Calendar import (.ics): implemented by Agent A. ---
+        importEvents: (_events) => {
+          // TODO(calendar-import): merge by externalId, tag source:'import', then replan.
+        },
+        clearImportedEvents: () => {
+          // TODO(calendar-import): drop events where source === 'import', then replan.
+        },
+
+        // --- Interactive suggestions: implemented by Agent B. ---
+        proposeForWindow: (_dateISO, _startMin, _endMin) => {
+          // TODO(suggestions): insert a `proposed` block for the chosen window.
+        },
+        acceptProposal: (_dateISO, _blockId) => {
+          // TODO(suggestions): set proposed:false, locked:true on the block.
+        },
+        dismissProposal: (_dateISO, _blockId) => {
+          // TODO(suggestions): remove the proposed block.
         },
 
         toggleInterest: (categoryKey) => {

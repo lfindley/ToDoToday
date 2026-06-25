@@ -57,6 +57,11 @@ export interface CalendarEvent {
   startTime: string // "HH:mm"
   endTime: string // "HH:mm"
   notes?: string
+  // Provenance — set when an event comes from an imported .ics file rather than
+  // being entered by hand. Lets re-imports dedupe and all-day events render right.
+  source?: 'manual' | 'import'
+  externalId?: string // stable UID from the source calendar (iCal UID)
+  allDay?: boolean
 }
 
 export interface DayTemplate {
@@ -87,6 +92,7 @@ export interface ScheduledBlock {
   suggestion?: string // for free blocks
   locked?: boolean // true once the user drags/edits it
   done?: boolean // task block checked off
+  proposed?: boolean // an unconfirmed suggestion awaiting the user's approval
 }
 
 export interface DayPlan {

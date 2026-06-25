@@ -5,6 +5,8 @@ import { addDaysISO, isoDate, isoToDate, prettyDate } from '../utils/date'
 import { displayTime, formatDuration, parseTime } from '../utils/time'
 import { seasonForDate, SEASON_EMOJI, SEASON_LABEL } from '../engine/season'
 import { suggestActivities } from '../engine/suggestions'
+import { plansToICS, exportableBlockCount } from '../utils/icsExport'
+import { downloadTextFile } from '../download'
 import Timeline from './Timeline'
 import { Button, Card, EmptyState, inputClass } from './ui'
 
@@ -107,6 +109,14 @@ export default function Today({
             😴 Asleep {displayTime(template.sleep.bedtime, fmt)} – {displayTime(template.sleep.wakeTime, fmt)}
           </span>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => plan && downloadTextFile(`todotoday-${dateISO}.ics`, plansToICS([plan], `ToDoToday — ${prettyDate(dateISO)}`), 'text/calendar')}
+              disabled={!plan || exportableBlockCount(plan ? [plan] : []) === 0}
+              title="Download this day's plan as an .ics calendar file"
+            >
+              Export .ics
+            </Button>
             <Button variant="ghost" onClick={() => replan(undefined, true)} title="Re-plan the week, discarding locked blocks">
               Rebuild
             </Button>

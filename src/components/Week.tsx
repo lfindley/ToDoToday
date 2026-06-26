@@ -6,8 +6,6 @@ import { addDaysISO, isoDate, isoToDate } from '../utils/date'
 import { displayHour, displayTime, parseTime } from '../utils/time'
 import { blockHeights } from '../utils/layout'
 import { summariseDay, daySegments } from '../engine/daySummary'
-import { plansToICS, exportableBlockCount } from '../utils/icsExport'
-import { downloadTextFile } from '../download'
 import { Button, Card, CapacityBar, Legend, BLOCK_STYLES } from './ui'
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -49,12 +47,6 @@ export default function Week({ onOpenDay }: { onOpenDay: (iso: string) => void }
   const summaryState = { tasks, recurring, events, template, budgets, dayPlans }
   const days = Array.from({ length: 7 }, (_, i) => addDaysISO(weekStart, i))
   const weekEnd = days[6]
-  const weekPlans = days.map((iso) => dayPlans[iso]).filter((p): p is NonNullable<typeof p> => !!p)
-
-  const exportWeek = () => {
-    const label = `${format(isoToDate(weekStart), 'd MMM')} – ${format(isoToDate(weekEnd), 'd MMM yyyy')}`
-    downloadTextFile(`todotoday-week-${weekStart}.ics`, plansToICS(weekPlans, `ToDoToday — ${label}`), 'text/calendar')
-  }
 
   // Shared vertical scale across all 7 columns: the waking window, expanded to
   // include any scheduled block that spills outside it so every day lines up.
@@ -105,14 +97,6 @@ export default function Week({ onOpenDay }: { onOpenDay: (iso: string) => void }
             <Legend color="bg-rose-500" label="Events" />
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="outline"
-              onClick={exportWeek}
-              disabled={exportableBlockCount(weekPlans) === 0}
-              title="Download this week's plan as an .ics calendar file"
-            >
-              Export .ics
-            </Button>
             <Button onClick={() => replan()}>Re-plan</Button>
           </div>
         </div>

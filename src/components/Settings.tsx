@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore'
 import type { Hemisphere } from '../types'
 import { Button, Card, Field, inputClass } from './ui'
 import CalendarImport from './CalendarImport'
+import CalendarExport from './CalendarExport'
 import ThemePicker, { ColorModeToggle } from './ThemePicker'
 import { INTEREST_CATEGORIES } from '../data/interests'
 import {
@@ -280,6 +281,10 @@ export default function Settings() {
             Notifications are blocked in your browser settings — in-app alerts still work.
           </p>
         )}
+      </Section>
+
+      <Section title="Export calendar" subtitle="Download your plan as an .ics calendar file.">
+        <CalendarExport />
       </Section>
 
       <Section title="Import calendar" subtitle="Bring in appointments from an .ics export.">

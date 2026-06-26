@@ -75,9 +75,8 @@ Planned, roughly in order. The backend and cross-device planner sync now exist; 
 - [x] **Cross-device sync** — optional account that syncs the planner across devices, with conflict resolution.
 - [ ] **Live Outlook sync** — automatic, refreshing sync via the Microsoft Graph API.
 - [ ] **Live Apple sync** — via CalDAV (using an app-specific password and a server-side proxy).
-- [ ] **Two-way sync** — edits flow in both directions for Outlook and Apple.
-
-Google Calendar isn't a current priority but would be a straightforward add alongside Outlook.
+- [ ] **Live Google sync** — via the Google Calendar API (OAuth, similar to Outlook).
+- [ ] **Two-way sync** — edits flow in both directions for Outlook, Apple, and Google.
 
 ### Known limitations (current)
 

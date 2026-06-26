@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#2563eb" />
     <title>ToDoToday — Daily Planner</title>
+    <!-- Apply saved accent + light/dark before first paint to avoid a flash. -->
+    <script>
+      try {
+        var s = JSON.parse(localStorage.getItem('todotoday') || '{}');
+        var settings = (s.state && s.state.settings) || {};
+        var root = document.documentElement;
+        root.dataset.theme = settings.theme || 'blue';
+        var mode = settings.colorMode || 'system';
+        var dark =
+          mode === 'dark' ||
+          (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        root.classList.toggle('dark', dark);
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

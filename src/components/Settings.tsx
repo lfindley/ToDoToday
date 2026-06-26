@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore'
 import type { Hemisphere } from '../types'
 import { Button, Card, Field, inputClass } from './ui'
 import CalendarImport from './CalendarImport'
+import ThemePicker, { ColorModeToggle } from './ThemePicker'
 import { INTEREST_CATEGORIES } from '../data/interests'
 import {
   notificationPermission,
@@ -58,6 +59,17 @@ export default function Settings() {
 
   return (
     <div className="space-y-4">
+      <Section title="Appearance" subtitle="Choose light or dark, and an accent colour.">
+        <div>
+          <div className="text-xs font-medium text-slate-600 mb-1">Theme</div>
+          <ColorModeToggle />
+        </div>
+        <div>
+          <div className="text-xs font-medium text-slate-600 mb-1">Accent colour</div>
+          <ThemePicker />
+        </div>
+      </Section>
+
       <Section title="Sleep" subtitle="Your waking window — everything is scheduled between these.">
         <div className="grid grid-cols-2 gap-3">
           <Field label="Wake up">

@@ -1,15 +1,18 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import type { ScheduledBlock } from '../types'
 
-/** Color palette per block type, shared by the Today timeline and Week grid. */
+/**
+ * Color palette per block type, shared by the Today timeline and Week grid.
+ * The `dark:` variants darken each block so its (now-light) text stays legible.
+ */
 export const BLOCK_STYLES: Record<ScheduledBlock['type'], { bg: string; bar: string }> = {
-  meal: { bg: 'bg-amber-50 border-amber-200', bar: 'bg-amber-400' },
-  recurring: { bg: 'bg-violet-50 border-violet-200', bar: 'bg-violet-400' },
-  task: { bg: 'bg-sky-50 border-sky-200', bar: 'bg-sky-500' },
-  free: { bg: 'bg-emerald-50 border-emerald-200', bar: 'bg-emerald-400' },
+  meal: { bg: 'bg-amber-50 border-amber-200 dark:bg-amber-950/50 dark:border-amber-800/60', bar: 'bg-amber-400' },
+  recurring: { bg: 'bg-violet-50 border-violet-200 dark:bg-violet-950/50 dark:border-violet-800/60', bar: 'bg-violet-400' },
+  task: { bg: 'bg-sky-50 border-sky-200 dark:bg-sky-950/50 dark:border-sky-800/60', bar: 'bg-sky-500' },
+  free: { bg: 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/50 dark:border-emerald-800/60', bar: 'bg-emerald-400' },
   buffer: { bg: 'bg-slate-50 border-slate-200', bar: 'bg-slate-300' },
-  sleep: { bg: 'bg-indigo-50 border-indigo-200', bar: 'bg-indigo-400' },
-  event: { bg: 'bg-rose-50 border-rose-200', bar: 'bg-rose-500' },
+  sleep: { bg: 'bg-indigo-50 border-indigo-200 dark:bg-indigo-950/50 dark:border-indigo-800/60', bar: 'bg-indigo-400' },
+  event: { bg: 'bg-rose-50 border-rose-200 dark:bg-rose-950/50 dark:border-rose-800/60', bar: 'bg-rose-500' },
 }
 
 export const inputClass =

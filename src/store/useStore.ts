@@ -38,6 +38,8 @@ const DEFAULT_SETTINGS: Settings = {
   bufferMinutes: 0,
   browserNotifications: false,
   timeFormat: '24h',
+  theme: 'blue',
+  colorMode: 'system',
 }
 
 export interface NewTaskInput {

@@ -21,7 +21,7 @@ import { fireNotification, notificationPermission } from './notifications'
 const ACCOUNTS_ENABLED = import.meta.env.VITE_ENABLE_ACCOUNTS === 'true'
 
 export default function App() {
-  const [view, setView] = useState<View>('today')
+  const [view, setView] = useState<View>('week')
   const [currentDate, setCurrentDate] = useState(isoDate())
   const onboarded = useStore((s) => s.onboarded)
   const alerts = useStore((s) => s.alerts)
@@ -32,6 +32,29 @@ export default function App() {
 
   // Restore session + drive cross-device sync (no-op when signed out).
   useSync()
+
+  // Apply the chosen accent scheme by flipping `data-theme` on <html>; the
+  // Tailwind `brand` palette reads the matching CSS variables (see index.css).
+  useEffect(() => {
+    document.documentElement.dataset.theme = settings.theme ?? 'blue'
+  }, [settings.theme])
+
+  // Apply light/dark via a `dark` class on <html>. In `system` mode, follow the
+  // OS preference and keep tracking it live.
+  const colorMode = settings.colorMode ?? 'system'
+  useEffect(() => {
+    const root = document.documentElement
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+    const apply = () => {
+      const dark = colorMode === 'dark' || (colorMode === 'system' && media.matches)
+      root.classList.toggle('dark', dark)
+    }
+    apply()
+    if (colorMode === 'system') {
+      media.addEventListener('change', apply)
+      return () => media.removeEventListener('change', apply)
+    }
+  }, [colorMode])
 
   // On load: refresh alerts and make sure the horizon is planned from today.
   useEffect(() => {
@@ -64,7 +87,7 @@ export default function App() {
   return (
     <div className="min-h-full flex flex-col">
       <div className="sticky top-0 z-20 shadow-sm">
-        <header className="bg-brand-600 text-white">
+        <header className="bg-gradient-to-r from-brand-600 to-brand-700 text-white">
           <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-xl">🗓️</span>

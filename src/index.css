@@ -2,6 +2,117 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Accent palette as CSS variables (space-separated RGB channels so Tailwind's
+ * `<alpha-value>` opacity modifiers keep working). The `brand` colour in
+ * tailwind.config.js reads these, and `data-theme` on <html> swaps the scheme.
+ * Default (no attribute) is the blue/Ocean theme.
+ */
+:root,
+:root[data-theme='blue'] {
+  --brand-50: 239 246 255;
+  --brand-100: 219 234 254;
+  --brand-300: 147 197 253;
+  --brand-400: 96 165 250;
+  --brand-500: 59 130 246;
+  --brand-600: 37 99 235;
+  --brand-700: 29 78 216;
+}
+
+:root[data-theme='violet'] {
+  --brand-50: 245 243 255;
+  --brand-100: 237 233 254;
+  --brand-300: 196 181 253;
+  --brand-400: 167 139 250;
+  --brand-500: 139 92 246;
+  --brand-600: 124 58 237;
+  --brand-700: 109 40 217;
+}
+
+:root[data-theme='emerald'] {
+  --brand-50: 236 253 245;
+  --brand-100: 209 250 229;
+  --brand-300: 110 231 183;
+  --brand-400: 52 211 153;
+  --brand-500: 16 185 129;
+  --brand-600: 5 150 105;
+  --brand-700: 4 120 87;
+}
+
+:root[data-theme='teal'] {
+  --brand-50: 240 253 250;
+  --brand-100: 204 251 241;
+  --brand-300: 94 234 212;
+  --brand-400: 45 212 191;
+  --brand-500: 20 184 166;
+  --brand-600: 13 148 136;
+  --brand-700: 15 118 110;
+}
+
+:root[data-theme='rose'] {
+  --brand-50: 255 241 242;
+  --brand-100: 255 228 230;
+  --brand-300: 253 164 175;
+  --brand-400: 251 113 133;
+  --brand-500: 244 63 94;
+  --brand-600: 225 29 72;
+  --brand-700: 190 18 60;
+}
+
+:root[data-theme='amber'] {
+  --brand-50: 255 251 235;
+  --brand-100: 254 243 199;
+  --brand-300: 252 211 77;
+  --brand-400: 251 191 36;
+  --brand-500: 245 158 11;
+  --brand-600: 217 119 6;
+  --brand-700: 180 83 9;
+}
+
+/* Neutral palette — light/default values match Tailwind's stock slate scale. */
+:root {
+  --slate-50: 248 250 252;
+  --slate-100: 241 245 249;
+  --slate-200: 226 232 240;
+  --slate-300: 203 213 225;
+  --slate-400: 148 163 184;
+  --slate-500: 100 116 139;
+  --slate-600: 71 85 105;
+  --slate-700: 51 65 85;
+  --slate-800: 30 41 59;
+  --slate-900: 15 23 42;
+  --slate-950: 2 6 23;
+
+  --surface: 255 255 255; /* `bg-white` cards/inputs/nav */
+  --page-bg: #f1f5f9;
+  --page-fg: #0f172a;
+  color-scheme: light;
+}
+
+/*
+ * Dark mode inverts the neutral ramp: low shades become dark surfaces and high
+ * shades become light text, so existing `bg-slate-50` / `text-slate-800` usage
+ * flips correctly everywhere without per-component changes.
+ */
+:root.dark {
+  --slate-50: 15 23 42;
+  --slate-100: 30 41 59;
+  --slate-200: 51 65 85;
+  --slate-300: 71 85 105;
+  --slate-400: 100 116 139;
+  --slate-500: 148 163 184;
+  --slate-600: 203 213 225;
+  --slate-700: 226 232 240;
+  --slate-800: 241 245 249;
+  --slate-900: 248 250 252;
+  --slate-950: 248 250 252;
+
+  --surface: 30 41 59; /* raised card colour, above the page background */
+  --page-bg: #0b1220;
+  --page-fg: #e2e8f0;
+  color-scheme: dark;
+}
+
 html,
 body,
 #root {
@@ -10,12 +121,17 @@ body,
 
 body {
   margin: 0;
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--page-bg);
+  color: var(--page-fg);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Range slider polish */
+/* `bg-white` is the app's raised surface (cards, inputs, nav); follow the mode. */
+.bg-white {
+  background-color: rgb(var(--surface) / var(--tw-bg-opacity, 1));
+}
+
+/* Range slider polish — follows the active accent theme. */
 input[type="range"] {
-  accent-color: #2563eb;
+  accent-color: rgb(var(--brand-600));
 }

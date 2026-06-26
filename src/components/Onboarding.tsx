@@ -5,6 +5,7 @@ import { Button, Card, Field, inputClass } from './ui'
 import { INTEREST_CATEGORIES } from '../data/interests'
 import { TaskForm, blankForm, formToInput } from './Tasks'
 import { RecurringForm, blankFlexible } from './Recurring'
+import ThemePicker, { ColorModeToggle } from './ThemePicker'
 import { displayTime, formatDuration } from '../utils/time'
 import { shortDate } from '../utils/date'
 
@@ -20,7 +21,7 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-full bg-slate-50">
-      <header className="bg-brand-600 text-white">
+      <header className="bg-gradient-to-r from-brand-600 to-brand-700 text-white">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xl">🗓️</span>
@@ -230,6 +231,16 @@ function DayStep() {
             </button>
           ))}
         </div>
+      </div>
+
+      <div>
+        <div className="text-sm font-medium text-slate-700 mb-2">Theme</div>
+        <ColorModeToggle />
+      </div>
+
+      <div>
+        <div className="text-sm font-medium text-slate-700 mb-2">Accent colour</div>
+        <ThemePicker />
       </div>
     </StepCard>
   )

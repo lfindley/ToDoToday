@@ -5,6 +5,8 @@ export type Category = 'productive' | 'health' | 'personal' | 'commitment'
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter'
 export type Hemisphere = 'north' | 'south'
 export type TimeFormat = '24h' | '12h'
+export type ThemeName = 'blue' | 'violet' | 'emerald' | 'rose' | 'amber' | 'teal'
+export type ColorMode = 'light' | 'dark' | 'system'
 
 /** Optional "do after / finish by" bounds within a single day, as "HH:mm". */
 export interface TimeWindow {
@@ -121,4 +123,6 @@ export interface Settings {
   bufferMinutes: number // gap inserted after task blocks
   browserNotifications: boolean
   timeFormat: TimeFormat // how clock times are shown across the app
+  theme: ThemeName // accent colour scheme applied across the app
+  colorMode: ColorMode // light / dark / follow the OS
 }

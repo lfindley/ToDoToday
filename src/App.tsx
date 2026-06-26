@@ -14,6 +14,11 @@ import SyncConflictModal from './components/SyncConflictModal'
 import { useSync } from './sync/useSync'
 import { fireNotification, notificationPermission } from './notifications'
 
+// Accounts/sync are hidden unless explicitly enabled. Keep off for a
+// frontend-only (local-only) deploy where no backend is running; set
+// VITE_ENABLE_ACCOUNTS=true once the backend is deployed (see server/SETUP.md).
+const ACCOUNTS_ENABLED = import.meta.env.VITE_ENABLE_ACCOUNTS === 'true'
+
 export default function App() {
   const [view, setView] = useState<View>('today')
   const [currentDate, setCurrentDate] = useState(isoDate())
@@ -61,7 +66,7 @@ export default function App() {
             </div>
             <div className="flex items-center gap-3">
               <AlertsBell />
-              <Account />
+              {ACCOUNTS_ENABLED && <Account />}
             </div>
           </div>
         </header>

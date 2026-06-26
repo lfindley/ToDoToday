@@ -92,7 +92,7 @@ export function RecurringForm({
           onClick={() => set({ ...blankFlexible, title: f.title, scheduleType: 'flexible' })}
           className={`px-3 py-2 rounded-lg text-sm font-medium border ${
             f.scheduleType === 'flexible'
-              ? 'bg-brand-50 border-brand-500 text-brand-700'
+              ? 'bg-brand-50 border-brand-500 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
               : 'bg-white border-slate-300 text-slate-600'
           }`}
         >
@@ -104,7 +104,7 @@ export function RecurringForm({
           onClick={() => set({ ...blankFixed, title: f.title, scheduleType: 'fixed' })}
           className={`px-3 py-2 rounded-lg text-sm font-medium border ${
             f.scheduleType === 'fixed'
-              ? 'bg-brand-50 border-brand-500 text-brand-700'
+              ? 'bg-brand-50 border-brand-500 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
               : 'bg-white border-slate-300 text-slate-600'
           }`}
         >

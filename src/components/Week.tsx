@@ -4,6 +4,7 @@ import type { ScheduledBlock, TimeFormat } from '../types'
 import { useStore } from '../store/useStore'
 import { addDaysISO, isoDate, isoToDate } from '../utils/date'
 import { displayHour, displayTime, parseTime } from '../utils/time'
+import { blockHeights } from '../utils/layout'
 import { summariseDay, daySegments } from '../engine/daySummary'
 import { plansToICS, exportableBlockCount } from '../utils/icsExport'
 import { downloadTextFile } from '../download'
@@ -133,11 +134,11 @@ export default function Week({ onOpenDay }: { onOpenDay: (iso: string) => void }
                     onClick={() => onOpenDay(iso)}
                     style={{ minWidth: MIN_COL }}
                     className={`flex-1 px-1.5 py-2 text-left border-l border-slate-100 hover:bg-slate-50 transition-colors ${
-                      isToday ? 'bg-brand-50' : ''
+                      isToday ? 'bg-brand-50 dark:bg-brand-500/15' : ''
                     }`}
                   >
                     <div className="flex items-baseline gap-1.5">
-                      <span className={`text-sm font-semibold ${isToday ? 'text-brand-700' : 'text-slate-800'}`}>
+                      <span className={`text-sm font-semibold ${isToday ? 'text-brand-700 dark:text-brand-300' : 'text-slate-800'}`}>
                         {WEEKDAYS[d.weekday]}
                       </span>
                       <span className="text-[11px] text-slate-400">{format(d.date, 'd MMM')}</span>
@@ -169,13 +170,14 @@ export default function Week({ onOpenDay }: { onOpenDay: (iso: string) => void }
               {days.map((iso) => {
                 const plan = dayPlans[iso]
                 const isToday = iso === today
+                const heights = blockHeights(plan?.blocks ?? [], { dayEnd, px: PX, min: 13 })
                 return (
                   <div
                     key={iso}
                     onClick={() => onOpenDay(iso)}
                     style={{ minWidth: MIN_COL }}
                     className={`flex-1 relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/40 ${
-                      isToday ? 'bg-brand-50/40' : ''
+                      isToday ? 'bg-brand-50/40 dark:bg-brand-500/10' : ''
                     }`}
                   >
                     {/* Hour gridlines */}
@@ -204,7 +206,7 @@ export default function Week({ onOpenDay }: { onOpenDay: (iso: string) => void }
                         key={b.id}
                         block={b}
                         top={(parseTime(b.start) - dayStart) * PX}
-                        height={(parseTime(b.end) - parseTime(b.start)) * PX}
+                        height={heights[b.id]}
                         fmt={fmt}
                       />
                     ))}
@@ -239,26 +241,32 @@ function WeekBlock({
   fmt: TimeFormat
 }) {
   const s = BLOCK_STYLES[block.type] ?? BLOCK_STYLES.buffer
-  const h = Math.max(13, height)
-  const showTime = h >= 32
+  const h = height
+  // Scale the label to the box: tiny blocks get smaller, tighter text; very
+  // short ones (< ~10px) show only the colour bar so text can't overflow.
+  const showTitle = h >= 10
+  const tiny = h < 24
+  const showTime = h >= 34
   return (
     <div
-      className={`absolute left-0.5 right-0.5 rounded border overflow-hidden ${s.bg} ${
+      className={`absolute left-0.5 right-0.5 rounded border overflow-hidden flex flex-col justify-center ${s.bg} ${
         block.done ? 'opacity-50' : ''
       } ${block.proposed ? 'border-dashed' : ''}`}
       style={{ top, height: h }}
       title={`${block.title} · ${displayTime(block.start, fmt)}–${displayTime(block.end, fmt)}`}
     >
       <div className={`absolute left-0 top-0 bottom-0 w-0.5 ${s.bar}`} />
-      <div
-        className={`pl-1.5 pr-1 pt-0.5 text-[10px] leading-tight font-medium truncate ${
-          block.done ? 'line-through text-slate-400' : 'text-slate-700'
-        }`}
-      >
-        {block.title}
-      </div>
+      {showTitle && (
+        <div
+          className={`pl-1.5 pr-1 font-medium truncate ${
+            tiny ? 'text-[9px] leading-none' : 'text-[10px] leading-tight'
+          } ${block.done ? 'line-through text-slate-400' : 'text-slate-700'}`}
+        >
+          {block.title}
+        </div>
+      )}
       {showTime && (
-        <div className="pl-1.5 pr-1 text-[9px] text-slate-400 tabular-nums truncate">
+        <div className="pl-1.5 pr-1 text-[9px] leading-none text-slate-400 tabular-nums truncate">
           {displayTime(block.start, fmt)}
         </div>
       )}

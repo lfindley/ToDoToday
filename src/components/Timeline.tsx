@@ -8,6 +8,7 @@ import {
 import type { DayPlan } from '../types'
 import { useStore } from '../store/useStore'
 import { displayHour, parseTime } from '../utils/time'
+import { blockHeights } from '../utils/layout'
 import BlockCard from './BlockCard'
 
 const PX = 1.1 // pixels per minute
@@ -30,6 +31,9 @@ export default function Timeline({ plan, dateISO }: { plan: DayPlan; dateISO: st
 
   const hourLines: number[] = []
   for (let m = Math.ceil(dayStart / 60) * 60; m <= dayEnd; m += 60) hourLines.push(m)
+
+  // Heights capped so tightly-packed short blocks don't overlap the next one.
+  const heights = blockHeights(plan.blocks, { dayEnd, px: PX, min: 22 })
 
   const onDragEnd = (e: DragEndEvent) => {
     const block = plan.blocks.find((b) => b.id === e.active.id)
@@ -59,7 +63,7 @@ export default function Timeline({ plan, dateISO }: { plan: DayPlan; dateISO: st
             block={b}
             dateISO={dateISO}
             top={(parseTime(b.start) - dayStart) * PX}
-            height={Math.max(22, (parseTime(b.end) - parseTime(b.start)) * PX)}
+            height={heights[b.id]}
           />
         ))}
       </div>

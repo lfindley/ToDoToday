@@ -25,7 +25,7 @@ export function ColorModeToggle() {
             aria-pressed={active}
             className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
               active
-                ? 'border-brand-500 bg-brand-50 text-brand-700 ring-1 ring-brand-500'
+                ? 'border-brand-500 bg-brand-50 text-brand-700 ring-1 ring-brand-500 dark:bg-brand-500/15 dark:text-brand-300'
                 : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'
             }`}
           >
@@ -55,7 +55,7 @@ export default function ThemePicker() {
             aria-pressed={active}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
               active
-                ? 'border-brand-500 bg-brand-50 text-brand-700 ring-1 ring-brand-500'
+                ? 'border-brand-500 bg-brand-50 text-brand-700 ring-1 ring-brand-500 dark:bg-brand-500/15 dark:text-brand-300'
                 : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'
             }`}
           >

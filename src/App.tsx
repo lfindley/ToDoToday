@@ -8,6 +8,7 @@ import Month from './components/Month'
 import Tasks from './components/Tasks'
 import Recurring from './components/Recurring'
 import Settings from './components/Settings'
+import Onboarding from './components/Onboarding'
 import AlertsBell from './components/AlertsBell'
 import Account from './components/Account'
 import SyncConflictModal from './components/SyncConflictModal'
@@ -22,6 +23,7 @@ const ACCOUNTS_ENABLED = import.meta.env.VITE_ENABLE_ACCOUNTS === 'true'
 export default function App() {
   const [view, setView] = useState<View>('today')
   const [currentDate, setCurrentDate] = useState(isoDate())
+  const onboarded = useStore((s) => s.onboarded)
   const alerts = useStore((s) => s.alerts)
   const settings = useStore((s) => s.settings)
   const recomputeAlerts = useStore((s) => s.recomputeAlerts)
@@ -54,6 +56,10 @@ export default function App() {
     setCurrentDate(iso)
     setView('today')
   }
+
+  // First-run startup screen: collect settings, recurring items and tasks before
+  // showing the planner. (Existing installs are migrated to onboarded — see useStore.)
+  if (!onboarded) return <Onboarding />
 
   return (
     <div className="min-h-full flex flex-col">

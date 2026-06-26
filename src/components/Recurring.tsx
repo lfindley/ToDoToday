@@ -15,7 +15,7 @@ const CATEGORIES: { value: Category; label: string }[] = [
 
 type FormState = Omit<RecurringTask, 'id'>
 
-const blankFlexible: FormState = {
+export const blankFlexible: FormState = {
   title: '',
   category: 'health',
   priority: 5,
@@ -59,7 +59,7 @@ function DayPicker({ value, onChange }: { value: number[]; onChange: (days: numb
   )
 }
 
-function RecurringForm({
+export function RecurringForm({
   initial,
   submitLabel,
   onSubmit,

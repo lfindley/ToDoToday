@@ -74,6 +74,12 @@ interface StoreState {
   settings: Settings
   dayPlans: Record<string, DayPlan>
   alerts: Alert[]
+  /**
+   * Has the user been through the first-run startup screen? Persisted locally
+   * but deliberately NOT part of the synced `PersistedState` — it's a per-device
+   * UI flag, not planner content.
+   */
+  onboarded: boolean
 
   // Tasks
   addTask: (t: NewTaskInput) => void
@@ -123,6 +129,9 @@ interface StoreState {
   recomputeAlerts: (todayISO?: string) => void
   dismissAlert: (id: string) => void
   markAlertNotified: (id: string) => void
+
+  // Onboarding (first-run startup screen)
+  completeOnboarding: () => void
 
   // Utility
   seedSample: () => void
@@ -176,6 +185,7 @@ export const useStore = create<StoreState>()(
         settings: DEFAULT_SETTINGS,
         dayPlans: {},
         alerts: [],
+        onboarded: false,
 
         addTask: (t) => {
           const task: Task = {
@@ -532,6 +542,14 @@ export const useStore = create<StoreState>()(
           get().replan(today, true)
         },
 
+        completeOnboarding: () => {
+          const today = isoDate()
+          set({ onboarded: true })
+          recompute(today)
+          // Build a clean plan from the inputs the user just provided.
+          get().replan(today, true)
+        },
+
         resetAll: () => {
           set({
             tasks: [],
@@ -543,6 +561,8 @@ export const useStore = create<StoreState>()(
             settings: DEFAULT_SETTINGS,
             dayPlans: {},
             alerts: [],
+            // Send the user back through the startup screen after a full reset.
+            onboarded: false,
           })
         },
 
@@ -563,7 +583,7 @@ export const useStore = create<StoreState>()(
     },
     {
       name: 'todotoday',
-      version: 1,
+      version: 2,
       partialize: (s) => ({
         tasks: s.tasks,
         recurring: s.recurring,
@@ -574,7 +594,17 @@ export const useStore = create<StoreState>()(
         settings: s.settings,
         dayPlans: s.dayPlans,
         alerts: s.alerts,
+        onboarded: s.onboarded,
       }),
+      // Anyone with state saved before the startup screen existed has already set
+      // the app up, so mark them onboarded. Brand-new installs have no persisted
+      // state, so this never runs for them and they start at `onboarded: false`.
+      migrate: (persisted, version) => {
+        if (version < 2 && persisted && typeof persisted === 'object') {
+          return { ...(persisted as Record<string, unknown>), onboarded: true }
+        }
+        return persisted as PersistedState & { onboarded: boolean }
+      },
     },
   ),
 )

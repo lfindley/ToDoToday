@@ -17,7 +17,7 @@ interface FormState {
   notes: string
 }
 
-const blankForm: FormState = {
+export const blankForm: FormState = {
   title: '',
   priority: 5,
   hours: 1,
@@ -43,7 +43,7 @@ function taskToForm(t: Task): FormState {
   }
 }
 
-function formToInput(f: FormState): NewTaskInput {
+export function formToInput(f: FormState): NewTaskInput {
   return {
     title: f.title,
     priority: f.priority,
@@ -55,7 +55,7 @@ function formToInput(f: FormState): NewTaskInput {
   }
 }
 
-function TaskForm({
+export function TaskForm({
   initial,
   submitLabel,
   onSubmit,
